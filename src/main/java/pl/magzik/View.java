@@ -26,7 +26,7 @@ public class View extends JFrame {
         this.add(clickerPanel);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setMinimumSize(new Dimension(800, 600));
+//        this.setMinimumSize(new Dimension(800, 600));
         this.pack();
         this.setLocationRelativeTo(null);
         this.setTitle("LOC_TITLE");

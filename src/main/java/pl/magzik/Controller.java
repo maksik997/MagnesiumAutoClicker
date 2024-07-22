@@ -13,4 +13,8 @@ public class Controller {
         this.model = model;
         this.resourceBundle = ResourceBundle.getBundle("localization", Locale.getDefault()); // todo tmp
     }
+
+    private void init() {
+
+    }
 }
