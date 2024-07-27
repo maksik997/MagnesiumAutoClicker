@@ -1,6 +1,5 @@
 // TODO:
 //  Redundancy etc.,
-//  Stock action listeners (turn off text fields if radio button isn't clicked),
 
 package pl.magzik.ui;
 
@@ -144,7 +143,11 @@ public class ClickerPanel extends JPanel {
         timesPanel.add(timesRadioButton);
 
         timesTextField = createIntegerTextField("LOC_CP_TIMES_TITLE");
+        timesTextField.setEnabled(false);
         timesPanel.add(timesTextField);
+
+        infiniteTimes.addActionListener(_ -> timesTextField.setEnabled(false));
+        timesRadioButton.addActionListener(_ -> timesTextField.setEnabled(true));
 
         clickRepeatPanel.add(timesPanel);
 
@@ -202,13 +205,27 @@ public class ClickerPanel extends JPanel {
         customLocationPanel.add(customLocationRadioButton);
 
         xLocationTextField = createIntegerTextField("X");
+        xLocationTextField.setEnabled(false);
         customLocationPanel.add(xLocationTextField);
 
         yLocationTextField = createIntegerTextField("Y");
+        yLocationTextField.setEnabled(false);
         customLocationPanel.add(yLocationTextField);
 
         pickLocationButton = new JButton("LOC_CP_PICK_LOCATION_BUTTON");
+        pickLocationButton.setEnabled(false);
         customLocationPanel.add(pickLocationButton);
+
+        currentLocationRadioButton.addActionListener(_ -> {
+            pickLocationButton.setEnabled(false);
+            xLocationTextField.setEnabled(false);
+            yLocationTextField.setEnabled(false);
+        });
+        customLocationRadioButton.addActionListener(_ -> {
+            pickLocationButton.setEnabled(true);
+            xLocationTextField.setEnabled(true);
+            yLocationTextField.setEnabled(true);
+        });
 
         locationPanel.add(customLocationPanel);
 
@@ -217,7 +234,7 @@ public class ClickerPanel extends JPanel {
 
     private void initializeFooterPanel() {
         JPanel footerPanel = new JPanel();
-        footerPanel.setLayout(new BoxLayout(footerPanel, BoxLayout.X_AXIS));
+        footerPanel.setLayout(new GridLayout(1, 3));
         footerPanel.setBorder(new EmptyBorder(5, 12,  10, 12));
 
         startButton = new JButton("LOC_CP_START_BUTTON");
@@ -238,5 +255,13 @@ public class ClickerPanel extends JPanel {
         footerPanel.add(toggleButton);
 
         add(footerPanel, BorderLayout.SOUTH);
+    }
+
+    public JComboBox<String> getButtonComboBox() {
+        return buttonComboBox;
+    }
+
+    public JComboBox<String> getTypeComboBox() {
+        return typeComboBox;
     }
 }

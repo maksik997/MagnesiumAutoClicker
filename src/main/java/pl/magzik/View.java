@@ -26,9 +26,14 @@ public class View extends JFrame {
         this.add(clickerPanel);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        this.setMinimumSize(new Dimension(800, 600));
+        this.setPreferredSize(new Dimension(600, 550));
         this.pack();
+        this.setResizable(false);
         this.setLocationRelativeTo(null);
         this.setTitle("LOC_TITLE");
+    }
+
+    public ClickerPanel getClickerPanel() {
+        return clickerPanel;
     }
 }

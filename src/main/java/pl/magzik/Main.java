@@ -12,6 +12,8 @@ public class Main {
         FlatDarculaLaf.setup();
 
         View view = new View();
+        Model model = new Model();
+        new Controller(view, model);
 
         SwingUtilities.invokeLater(() -> {
             view.setVisible(true);
