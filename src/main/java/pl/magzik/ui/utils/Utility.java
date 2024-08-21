@@ -7,11 +7,23 @@ import javax.swing.text.AbstractDocument;
 
 public class Utility {
 
-    public static JTextField createIntegerTextField() {
+    public static JTextField createUnsignedIntegerTextField() {
         JTextField textField = new JTextField("0", 5);
         textField.setBorder(new EmptyBorder(2, 5, 2, 5));
         textField.setHorizontalAlignment(JTextField.RIGHT);
-        ((AbstractDocument) textField.getDocument()).setDocumentFilter(new IntegerDocumentFilter());
+        ((AbstractDocument) textField.getDocument()).setDocumentFilter(new UnsignedIntegerDocumentFilter());
+
+        return textField;
+    }
+
+    public static JTextField createUnsignedIntegerTextField(String title) {
+        JTextField textField = new JTextField("0", 8);
+        textField.setBorder(new TitledBorder(
+                new EmptyBorder(2, 5, 2, 5),
+                title
+        ));
+        textField.setHorizontalAlignment(JTextField.RIGHT);
+        ((AbstractDocument) textField.getDocument()).setDocumentFilter(new UnsignedIntegerDocumentFilter());
 
         return textField;
     }
@@ -27,5 +39,4 @@ public class Utility {
 
         return textField;
     }
-
 }
