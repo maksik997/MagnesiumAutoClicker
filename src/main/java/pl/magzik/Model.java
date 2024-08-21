@@ -2,9 +2,13 @@ package pl.magzik;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
+import java.util.List;
 
 public class Model {
     public enum MouseButton {
@@ -53,15 +57,52 @@ public class Model {
 
     private MouseButton mouseButton;
     private ClickType clickType;
-
     private Runnable clickTask;
     private State state;
-
     private int clickCount;
 
     private final ExecutorService executor;
 
-    public Model() {
+    private final File configFile;
+
+    private String language, theme, startHotkey, stopHotkey, toggleHotkey;
+
+    public Model() throws IOException {
+
+        File configDirectory = new File(System.getProperty("user.home") + File.separator + ".magnesiumAutoClicker");
+        if (!configDirectory.exists()) {
+            configDirectory.mkdir();
+        }
+
+        configFile = new File(configDirectory, "config.cfg");
+
+        if (!configFile.exists()) {
+            try (InputStream resourceStream = Model.class.getClassLoader().getResourceAsStream("default.cfg")) {
+                if (resourceStream == null) {
+                    throw new FileNotFoundException("default.cfg not found");
+                }
+
+                Files.copy(resourceStream, configFile.toPath());
+            }
+        }
+
+
+        List<String> lines = Files.readAllLines(configFile.toPath());
+
+        for (String line : lines) {
+            String[] split = line.split(": ");
+            String key = split[0], value = split[1];
+
+            switch (key) {
+                case "lang" -> language = value;
+                case "theme" -> theme = value.toUpperCase();
+                case "start_hotkey" -> startHotkey = value.toUpperCase();
+                case "stop_hotkey" -> stopHotkey = value.toUpperCase();
+                case "toggle_hotkey" -> toggleHotkey = value.toUpperCase();
+                default -> throw new IllegalStateException("Unexpected key: " + key);
+            }
+        }
+
         mouseButton = MouseButton.LEFT;
         clickType = ClickType.SINGLE;
 
@@ -146,5 +187,29 @@ public class Model {
 
     public int getClickCount() {
         return clickCount;
+    }
+
+    public void setClickCount(int clickCount) {
+        this.clickCount = clickCount;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public String getTheme() {
+        return theme;
+    }
+
+    public String getStartHotkey() {
+        return startHotkey;
+    }
+
+    public String getStopHotkey() {
+        return stopHotkey;
+    }
+
+    public String getToggleHotkey() {
+        return toggleHotkey;
     }
 }

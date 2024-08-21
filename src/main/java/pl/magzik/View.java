@@ -36,4 +36,23 @@ public class View extends JFrame {
     public ClickerPanel getClickerPanel() {
         return clickerPanel;
     }
+
+    public SettingsPanel getSettingsPanel() {
+        return settingsPanel;
+    }
+
+    public List<JPanel> getPanels() {
+        return panels;
+    }
+
+    public void changeScene(int idx) {
+        if (idx >= panels.size() || idx < 0) throw new IndexOutOfBoundsException();
+
+        panels.forEach(this::remove);
+
+        this.add(panels.get(idx));
+
+        repaint();
+        revalidate();
+    }
 }

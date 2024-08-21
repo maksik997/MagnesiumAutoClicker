@@ -298,10 +298,6 @@ public class ClickerPanel extends JPanel {
         return timesRadioButton;
     }
 
-    public JRadioButton getCurrentLocationRadioButton() {
-        return currentLocationRadioButton;
-    }
-
     public JRadioButton getCustomLocationRadioButton() {
         return customLocationRadioButton;
     }
@@ -340,5 +336,9 @@ public class ClickerPanel extends JPanel {
 
     public JButton getPickLocationButton() {
         return pickLocationButton;
+    }
+
+    public JButton getSettingsButton() {
+        return settingsButton;
     }
 }

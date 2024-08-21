@@ -2,15 +2,21 @@ package pl.magzik;
 
 import pl.magzik.ui.ClickerPanel;
 import pl.magzik.ui.LocationPicker;
+import pl.magzik.ui.SettingsPanel;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.List;
 
 public class Controller {
     private final View view;
@@ -22,8 +28,12 @@ public class Controller {
     public Controller(View view, Model model) {
         this.view = view;
         this.model = model;
-        this.resourceBundle = ResourceBundle.getBundle("localization", Locale.getDefault()); // todo tmp
-        translateComponents(view);
+
+        Locale loc = Locale.forLanguageTag(model.getLanguage());
+
+        this.resourceBundle = ResourceBundle.getBundle("localization", loc); // todo tmp
+        view.getPanels().forEach(this::translateComponents);
+
         init();
     }
 
@@ -88,7 +98,10 @@ public class Controller {
     }
 
     private void init() {
+        // Clicker Panel
         ClickerPanel cp = view.getClickerPanel();
+
+        cp.getMillisecondsTextField().setText("1");
 
         // Initialize Combo boxes
         for (Model.MouseButton mb : Model.MouseButton.values()) {
@@ -109,6 +122,22 @@ public class Controller {
           translate(model.getClickType().toString())
         );
 
+        cp.getButtonComboBox().addActionListener(_ -> {
+            model.setMouseButton(
+                Model.MouseButton.get(
+                    reverseTranslate((String) cp.getButtonComboBox().getSelectedItem())
+                )
+            );
+        });
+
+        cp.getTypeComboBox().addActionListener(_ -> {
+            model.setClickType(
+                Model.ClickType.get(
+                    reverseTranslate((String) cp.getTypeComboBox().getSelectedItem())
+                )
+            );
+        });
+
         // Initialize Buttons
         cp.getStartButton().addActionListener(_ -> {
             resetClickerWorker();
@@ -116,7 +145,7 @@ public class Controller {
 
             clickerWorker.execute();
 
-            cp.getStartButton().setEnabled(false); // todo
+            cp.getStartButton().setEnabled(false);
         });
 
         cp.getStopButton().setEnabled(false);
@@ -131,8 +160,6 @@ public class Controller {
                 cp.getStopButton().doClick();
             }
         });
-
-        cp.getMillisecondsTextField().setText("1");
 
         cp.getPickLocationButton().addActionListener(_ -> {
             view.setExtendedState(Frame.ICONIFIED);
@@ -150,6 +177,84 @@ public class Controller {
 
             SwingUtilities.invokeLater(() -> lp.setVisible(true));
         });
+
+        cp.getSettingsButton().addActionListener(_ -> {
+            view.changeScene(1);
+        });
+
+        // Settings Panel
+        SettingsPanel sp = view.getSettingsPanel();
+
+        // Initialize
+        List<String> langs = new ArrayList<>();
+        langs.add("en-US");
+        langs.add("pl-PL");
+
+        for (String lang : langs) {
+            String key = "LOC_LANG_" + lang;
+            sp.getLanguageComboBox().addItem(
+                translate(key)
+            );
+        }
+
+        String language = "LOC_LANG_" + model.getLanguage();
+        sp.getLanguageComboBox().setSelectedItem(
+            translate(language)
+        );
+
+        List<String> themes = new ArrayList<>();
+        themes.add("DARK");
+        themes.add("LIGHT");
+
+        for (String theme : themes) {
+            String key = "LOC_THEME_" + theme;
+            sp.getThemeComboBox().addItem(
+                translate(key)
+            );
+        }
+
+        String theme = "LOC_THEME_" + model.getTheme();
+        sp.getThemeComboBox().setSelectedItem(
+            translate(theme)
+        );
+
+        // TODO JAVA NATIVE HOOK?
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (e.getID() == KeyEvent.KEY_PRESSED) {
+                if (KeyStroke.getKeyStrokeForEvent(e).equals(KeyStroke.getKeyStroke(model.getStartHotkey()))) {
+                    cp.getStartButton().doClick();
+                    return true;
+                } else if (KeyStroke.getKeyStrokeForEvent(e).equals(KeyStroke.getKeyStroke(model.getStopHotkey()))) {
+                    cp.getStopButton().doClick();
+                    return true;
+                } else if (KeyStroke.getKeyStrokeForEvent(e).equals(KeyStroke.getKeyStroke(model.getToggleHotkey()))) {
+                    cp.getToggleButton().doClick();
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        sp.getStartHotkey().setText(model.getStartHotkey());
+        cp.getStartButton().setText(
+            String.format("%s (%s)", cp.getStartButton().getText(), model.getStartHotkey())
+        );
+
+        sp.getStopHotkey().setText(model.getStopHotkey());
+        cp.getStopButton().setText(
+            String.format("%s (%s)", cp.getStopButton().getText(), model.getStopHotkey())
+        );
+
+        sp.getToggleHotkey().setText(model.getToggleHotkey());
+        cp.getToggleButton().setText(
+            String.format("%s (%s)", cp.getToggleButton().getText(), model.getToggleHotkey())
+        );
+
+        // Buttons
+        sp.getBackButton().addActionListener(_ -> view.changeScene(0));
+
+        // TODO SAVING
+
     }
 
     private void resetClickerWorker() {
@@ -200,6 +305,8 @@ public class Controller {
 
                 cp.getStartButton().setEnabled(true);
                 cp.getStopButton().setEnabled(false);
+
+                model.setClickCount(0);
             }
         };
     }
