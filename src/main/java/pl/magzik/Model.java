@@ -68,7 +68,6 @@ public class Model {
     private String language, theme, startHotkey, stopHotkey, toggleHotkey;
 
     public Model() throws IOException {
-
         File configDirectory = new File(System.getProperty("user.home") + File.separator + ".magnesiumAutoClicker");
         if (!configDirectory.exists()) {
             configDirectory.mkdir();
@@ -76,6 +75,46 @@ public class Model {
 
         configFile = new File(configDirectory, "config.cfg");
 
+        loadConfig();
+
+
+
+        mouseButton = MouseButton.LEFT;
+        clickType = ClickType.SINGLE;
+
+        clickTask = null;
+        state = State.RESET;
+        clickCount = 0;
+
+        executor = Executors.newSingleThreadExecutor();
+    }
+
+    public void saveConfig(String lang, String theme, String startHotkey, String stopHotkey, String toggleHotkey) throws IOException {
+        if (lang.equals(this.language) && theme.equals(this.theme) && startHotkey.equals(this.startHotkey) && stopHotkey.equals(this.stopHotkey) && toggleHotkey.equals(this.toggleHotkey))
+            return;
+
+        this.language = lang;
+        this.theme = theme;
+        this.startHotkey = startHotkey;
+        this.stopHotkey = stopHotkey;
+        this.toggleHotkey = toggleHotkey;
+
+        try (BufferedWriter writer = Files.newBufferedWriter(configFile.toPath())) {
+            writer.write(String.format("lang: %s", lang));
+            writer.newLine();
+            writer.write(String.format("theme: %s", theme.toLowerCase()));
+            writer.newLine();
+            writer.write(String.format("start_hotkey: %s", startHotkey));
+            writer.newLine();
+            writer.write(String.format("stop_hotkey: %s", stopHotkey));
+            writer.newLine();
+            writer.write(String.format("toggle_hotkey: %s", toggleHotkey));
+
+            writer.flush();
+        }
+    }
+
+    private void loadConfig() throws IOException {
         if (!configFile.exists()) {
             try (InputStream resourceStream = Model.class.getClassLoader().getResourceAsStream("default.cfg")) {
                 if (resourceStream == null) {
@@ -85,7 +124,6 @@ public class Model {
                 Files.copy(resourceStream, configFile.toPath());
             }
         }
-
 
         List<String> lines = Files.readAllLines(configFile.toPath());
 
@@ -102,15 +140,6 @@ public class Model {
                 default -> throw new IllegalStateException("Unexpected key: " + key);
             }
         }
-
-        mouseButton = MouseButton.LEFT;
-        clickType = ClickType.SINGLE;
-
-        clickTask = null;
-        state = State.RESET;
-        clickCount = 0;
-
-        executor = Executors.newSingleThreadExecutor();
     }
 
     public void startClicker(int interval, int times, String mouseButton, String clickType, int x, int y) throws InterruptedException {

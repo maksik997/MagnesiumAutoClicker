@@ -13,9 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.List;
 
 public class Controller {
@@ -254,6 +252,49 @@ public class Controller {
         sp.getBackButton().addActionListener(_ -> view.changeScene(0));
 
         // TODO SAVING
+        sp.getSaveButton().addActionListener(_ -> {
+            String l = reverseTranslate(
+                Objects.requireNonNull(sp.getLanguageComboBox().getSelectedItem()).toString()
+            ),
+            t = reverseTranslate(
+                Objects.requireNonNull(sp.getThemeComboBox().getSelectedItem()).toString()
+            ),
+            startHotkey = reverseTranslate(sp.getStartHotkey().getText()),
+            stopHotkey = reverseTranslate(sp.getStopHotkey().getText()),
+            toggleHotkey = reverseTranslate(sp.getToggleHotkey().getText());
+
+            String[] splitL = l.split("_");
+            l = splitL[splitL.length - 1];
+
+            String[] splitT = t.split("_");
+            t = splitT[splitT.length - 1];
+            
+            if (!model.getLanguage().equals(l) || !model.getTheme().equals(t)) {
+                JOptionPane.showMessageDialog(
+                    view,
+                    translate("LOC_RESTART_NEEDED_MESSAGE"),
+                    translate("LOC_RESTART_NEEDED_MESSAGE_TITLE"),
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+
+            try {
+                model.saveConfig(l, t, startHotkey, stopHotkey, toggleHotkey);
+            } catch (IOException e) {
+                throw new RuntimeException(e); // todo
+            }
+
+            cp.getStartButton().setText(
+                String.format("%s (%s)", cp.getStartButton().getText().split(" ")[0], model.getStartHotkey())
+            );
+            cp.getStopButton().setText(
+                String.format("%s (%s)", cp.getStopButton().getText().split(" ")[0], model.getStopHotkey())
+            );
+            cp.getToggleButton().setText(
+                String.format("%s (%s)", cp.getToggleButton().getText().split(" ")[0], model.getToggleHotkey())
+            );
+
+        });
 
     }
 

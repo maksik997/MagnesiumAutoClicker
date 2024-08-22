@@ -11,15 +11,12 @@ public class Main {
         System.setProperty("apple.awt.application.name", "Magnesium Auto Clicker");
         System.setProperty("apple.awt.application.appearance", "system");
         setupUiManager();
-//        FlatDarculaLaf.setup();
 
         Model model = new Model();
 
-        switch (model.getTheme()) {
-            case "dark" -> FlatDarculaLaf.setup();
-            case "light" -> FlatLightLaf.setup();
-            default -> FlatLightLaf.setup();
-        }
+        if (model.getTheme().equals("DARK")) FlatDarculaLaf.setup();
+        else FlatLightLaf.setup();
+
 
         View view = new View();
         new Controller(view, model);

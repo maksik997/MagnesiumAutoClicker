@@ -121,16 +121,22 @@ public class SettingsPanel extends JPanel {
         add(new JPanel(), c);
         c.gridy++;
         c.weighty = 0;
+        c.weightx = 1;
         c.anchor = GridBagConstraints.SOUTH;
+        c.gridwidth = 2;
+
+        JPanel mainButtonPanel = new JPanel();
+        mainButtonPanel.setLayout(new GridLayout(1, 2, 20, 0));
 
         saveButton = new JButton("LOC_SAVE");
         saveButton.setFont(saveButton.getFont().deriveFont(Font.PLAIN, 16));
-        add(saveButton, c);
-        c.gridx++;
+        mainButtonPanel.add(saveButton);
 
         backButton = new JButton("LOC_BACK");
         backButton.setFont(backButton.getFont().deriveFont(Font.PLAIN, 16));
-        add(backButton, c);
+        mainButtonPanel.add(backButton);
+
+        add(mainButtonPanel, c);
 
 
         startCapture.addActionListener(_ -> {
