@@ -1,5 +1,7 @@
 package pl.magzik;
 
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import pl.magzik.ui.ClickerPanel;
 import pl.magzik.ui.LocationPicker;
 import pl.magzik.ui.SettingsPanel;
@@ -10,13 +12,23 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
-public class Controller {
+/**
+ * Controller of the app. Handles all user interaction and all view-model interactions.
+ * */
+public class Controller implements NativeKeyListener {
+
+    private static final List<String> languages = new ArrayList<>(),
+                                      themes = new ArrayList<>();
+    static {
+        languages.add("en-US");
+        languages.add("pl-PL");
+        themes.add("DARK");
+        themes.add("LIGHT");
+    }
+
     private final View view;
     private final Model model;
     private final ResourceBundle resourceBundle;
@@ -24,33 +36,58 @@ public class Controller {
     private SwingWorker<Void, Void> clickerWorker;
 
     public Controller(View view, Model model) {
+        Objects.requireNonNull(view);
+        Objects.requireNonNull(model);
+
         this.view = view;
         this.model = model;
 
+        // Picking Locale from user's settings.
         Locale loc = Locale.forLanguageTag(model.getLanguage());
+        this.resourceBundle = ResourceBundle.getBundle("localization", loc);
 
-        this.resourceBundle = ResourceBundle.getBundle("localization", loc); // todo tmp
-        view.getPanels().forEach(this::translateComponents);
+        // View elements translation.
+        this.view.setTitle(translate(view.getTitle()));
+        this.view.getPanels().forEach(this::translateComponents);
 
         init();
     }
 
-    private String translate(String key) {
-        if (resourceBundle.containsKey(key)) {
-            return resourceBundle.getString(key);
-        }
+    /**
+     * Translates given key into specified in resourceBundle value
+     * @param key
+     *          Localization key to be translated
+     * @return Value of given key or key if there is no translation available
+     */
+    public String translate(String key) {
+        Objects.requireNonNull(key);
+
+        if (resourceBundle.containsKey(key)) return resourceBundle.getString(key);
         return key;
     }
 
-    private String reverseTranslate(String key) {
+    /**
+     * Translates given value into translation key.
+     * @param value
+     *            Value to be translated.
+     * @return Localization key or value if no key is available.
+     * */
+    public String reverseTranslate(String value) {
+        Objects.requireNonNull(value);
+
         return resourceBundle.keySet().stream()
-                .filter(k -> resourceBundle.getString(k).equals(key))
+                .filter(k -> resourceBundle.getString(k).equals(value))
                 .findFirst()
-                .orElse(key);
+                .orElse(value);
     }
 
+    /**
+     * Translates swing components using ResourceBundle. This method works recursively.
+     * @param container
+     *                 {@link Container} to translate
+     * */
     private void translateComponents(Container container) {
-        view.setTitle(translate(view.getTitle()));
+        Objects.requireNonNull(container);
 
         for (Component component : container.getComponents()) {
             if (component instanceof JFrame frame) {
@@ -91,17 +128,29 @@ public class Controller {
             }
 
             if (component instanceof Container c) translateComponents(c);
-
         }
     }
 
+    /**
+     * Initializes Swing components, links ActionListeners etc.
+     * */
     private void init() {
+        initClickerPanel();
+        initSettingsPanel();
+    }
+
+    /**
+     * Initializes Swing components, links ActionListeners etc. in Clicker Panel
+     * */
+    private void initClickerPanel() {
         // Clicker Panel
         ClickerPanel cp = view.getClickerPanel();
 
+        // Initialize
+        // Set one millisecond interval.
         cp.getMillisecondsTextField().setText("1");
 
-        // Initialize Combo boxes
+        // MouseButton ComboBox
         for (Model.MouseButton mb : Model.MouseButton.values()) {
             cp.getButtonComboBox().addItem(
                 translate(mb.toString())
@@ -111,64 +160,76 @@ public class Controller {
             translate(model.getMouseButton().toString())
         );
 
+        // ClickType ComboBox
         for (Model.ClickType ct : Model.ClickType.values()) {
             cp.getTypeComboBox().addItem(
                 translate(ct.toString())
             );
         }
         cp.getTypeComboBox().setSelectedItem(
-          translate(model.getClickType().toString())
+            translate(model.getClickType().toString())
         );
 
-        cp.getButtonComboBox().addActionListener(_ -> {
-            model.setMouseButton(
-                Model.MouseButton.get(
-                    reverseTranslate((String) cp.getButtonComboBox().getSelectedItem())
-                )
-            );
-        });
-
-        cp.getTypeComboBox().addActionListener(_ -> {
-            model.setClickType(
-                Model.ClickType.get(
-                    reverseTranslate((String) cp.getTypeComboBox().getSelectedItem())
-                )
-            );
-        });
-
-        // Initialize Buttons
-        cp.getStartButton().addActionListener(_ -> {
-            resetClickerWorker();
-            cp.getStopButton().setEnabled(true);
-
-            clickerWorker.execute();
-
-            cp.getStartButton().setEnabled(false);
-        });
+        // Buttons shortcut text
+        cp.getStartButton().setText(
+            String.format("%s (%s)", cp.getStartButton().getText(), model.getStartHotkey())
+        );
+        cp.getStopButton().setText(
+            String.format("%s (%s)", cp.getStopButton().getText(), model.getStopHotkey())
+        );
+        cp.getToggleButton().setText(
+            String.format("%s (%s)", cp.getToggleButton().getText(), model.getToggleHotkey())
+        );
 
         cp.getStopButton().setEnabled(false);
-        cp.getStopButton().addActionListener(_ -> {
-            model.stopClicker();
+
+        // Action Listeners
+        // Button ComboBox
+        cp.getButtonComboBox().addActionListener(_ -> model.setMouseButton(
+            Model.MouseButton.get(
+                reverseTranslate((String) cp.getButtonComboBox().getSelectedItem())
+            )
+        ));
+
+        // ClickType ComboBox
+        cp.getTypeComboBox().addActionListener(_ -> model.setClickType(
+            Model.ClickType.get(
+                reverseTranslate((String) cp.getTypeComboBox().getSelectedItem())
+            )
+        ));
+
+        // StartButton Listener
+        cp.getStartButton().addActionListener(_ -> {
+            resetClickerWorker();
+
+            cp.getStopButton().setEnabled(true);
+            cp.getStartButton().setEnabled(false);
+
+            clickerWorker.execute();
         });
 
+        // StopButton Listener
+        cp.getStopButton().addActionListener(_ -> model.stopClicker());
+
+        // ToggleButton Listener
         cp.getToggleButton().addActionListener(_ -> {
-            if (cp.getStartButton().isEnabled()) {
-                cp.getStartButton().doClick();
-            } else {
-                cp.getStopButton().doClick();
-            }
+            if (!model.isClickerRunning()) cp.getStartButton().doClick();
+            else cp.getStopButton().doClick();
         });
 
+        // PickLocationButton Listener
         cp.getPickLocationButton().addActionListener(_ -> {
             view.setExtendedState(Frame.ICONIFIED);
 
             LocationPicker lp = new LocationPicker();
+
+            // This way I can take X, Y coordinates without bigger problem.
+            // After click window is disposed. See: LocationPicker
             lp.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     cp.getXLocationTextField().setText(Integer.toString(lp.getXPoint()));
                     cp.getYLocationTextField().setText(Integer.toString(lp.getYPoint()));
-
                     view.setExtendedState(Frame.NORMAL);
                 }
             });
@@ -176,34 +237,30 @@ public class Controller {
             SwingUtilities.invokeLater(() -> lp.setVisible(true));
         });
 
+        // SettingsButton Listener
         cp.getSettingsButton().addActionListener(_ -> {
-            view.changeScene(1);
+            resetSettingsPanel();
+            view.changeScene(View.SETTINGS_SCENE);
         });
+    }
 
+    /**
+     * Initializes Swing components, links ActionListeners etc. in Settings Panel
+     * */
+    private void initSettingsPanel() {
         // Settings Panel
         SettingsPanel sp = view.getSettingsPanel();
 
         // Initialize
-        List<String> langs = new ArrayList<>();
-        langs.add("en-US");
-        langs.add("pl-PL");
-
-        for (String lang : langs) {
+        // Languages ComboBox
+        for (String lang : languages) {
             String key = "LOC_LANG_" + lang;
             sp.getLanguageComboBox().addItem(
                 translate(key)
             );
         }
 
-        String language = "LOC_LANG_" + model.getLanguage();
-        sp.getLanguageComboBox().setSelectedItem(
-            translate(language)
-        );
-
-        List<String> themes = new ArrayList<>();
-        themes.add("DARK");
-        themes.add("LIGHT");
-
+        // Themes ComboBox
         for (String theme : themes) {
             String key = "LOC_THEME_" + theme;
             sp.getThemeComboBox().addItem(
@@ -211,64 +268,33 @@ public class Controller {
             );
         }
 
-        String theme = "LOC_THEME_" + model.getTheme();
-        sp.getThemeComboBox().setSelectedItem(
-            translate(theme)
-        );
+        resetSettingsPanel();
 
-        // TODO JAVA NATIVE HOOK?
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
-            if (e.getID() == KeyEvent.KEY_PRESSED) {
-                if (KeyStroke.getKeyStrokeForEvent(e).equals(KeyStroke.getKeyStroke(model.getStartHotkey()))) {
-                    cp.getStartButton().doClick();
-                    return true;
-                } else if (KeyStroke.getKeyStrokeForEvent(e).equals(KeyStroke.getKeyStroke(model.getStopHotkey()))) {
-                    cp.getStopButton().doClick();
-                    return true;
-                } else if (KeyStroke.getKeyStrokeForEvent(e).equals(KeyStroke.getKeyStroke(model.getToggleHotkey()))) {
-                    cp.getToggleButton().doClick();
-                    return true;
-                }
-            }
-            return false;
-        });
+        // Listeners
+        // BackButton Listener
+        sp.getBackButton().addActionListener(_ -> view.changeScene(View.CLICKER_SCENE));
 
-        sp.getStartHotkey().setText(model.getStartHotkey());
-        cp.getStartButton().setText(
-            String.format("%s (%s)", cp.getStartButton().getText(), model.getStartHotkey())
-        );
-
-        sp.getStopHotkey().setText(model.getStopHotkey());
-        cp.getStopButton().setText(
-            String.format("%s (%s)", cp.getStopButton().getText(), model.getStopHotkey())
-        );
-
-        sp.getToggleHotkey().setText(model.getToggleHotkey());
-        cp.getToggleButton().setText(
-            String.format("%s (%s)", cp.getToggleButton().getText(), model.getToggleHotkey())
-        );
-
-        // Buttons
-        sp.getBackButton().addActionListener(_ -> view.changeScene(0));
-
-        // TODO SAVING
+        // SaveButton Listener
         sp.getSaveButton().addActionListener(_ -> {
+            ClickerPanel cp = view.getClickerPanel();
+
+            // Take data
             String l = reverseTranslate(
-                Objects.requireNonNull(sp.getLanguageComboBox().getSelectedItem()).toString()
-            ),
-            t = reverseTranslate(
-                Objects.requireNonNull(sp.getThemeComboBox().getSelectedItem()).toString()
-            ),
-            startHotkey = reverseTranslate(sp.getStartHotkey().getText()),
-            stopHotkey = reverseTranslate(sp.getStopHotkey().getText()),
-            toggleHotkey = reverseTranslate(sp.getToggleHotkey().getText());
+                    Objects.requireNonNull(sp.getLanguageComboBox().getSelectedItem()).toString()
+                ),
+                t = reverseTranslate(
+                    Objects.requireNonNull(sp.getThemeComboBox().getSelectedItem()).toString()
+                ),
+                startHotkey = reverseTranslate(sp.getStartHotkey().getText()),
+                stopHotkey = reverseTranslate(sp.getStopHotkey().getText()),
+                toggleHotkey = reverseTranslate(sp.getToggleHotkey().getText());
 
             String[] splitL = l.split("_");
             l = splitL[splitL.length - 1];
 
             String[] splitT = t.split("_");
             t = splitT[splitT.length - 1];
-            
+
             if (!model.getLanguage().equals(l) || !model.getTheme().equals(t)) {
                 JOptionPane.showMessageDialog(
                     view,
@@ -281,23 +307,34 @@ public class Controller {
             try {
                 model.saveConfig(l, t, startHotkey, stopHotkey, toggleHotkey);
             } catch (IOException e) {
-                throw new RuntimeException(e); // todo
+                JOptionPane.showMessageDialog(
+                    view,
+                    translate("LOC_SAVE_ERROR_MESSAGE"),
+                    translate("LOC_SAVE_ERROR_TITLE"),
+                    JOptionPane.ERROR_MESSAGE
+                );
+                return;
             }
 
             cp.getStartButton().setText(
-                String.format("%s (%s)", cp.getStartButton().getText().split(" ")[0], model.getStartHotkey())
+                    String.format("%s (%s)", cp.getStartButton().getText().split(" ")[0], model.getStartHotkey())
             );
             cp.getStopButton().setText(
-                String.format("%s (%s)", cp.getStopButton().getText().split(" ")[0], model.getStopHotkey())
+                    String.format("%s (%s)", cp.getStopButton().getText().split(" ")[0], model.getStopHotkey())
             );
             cp.getToggleButton().setText(
-                String.format("%s (%s)", cp.getToggleButton().getText().split(" ")[0], model.getToggleHotkey())
+                    String.format("%s (%s)", cp.getToggleButton().getText().split(" ")[0], model.getToggleHotkey())
             );
 
+            resetSettingsPanel();
         });
-
     }
 
+    /**
+     * Resets {@link SwingWorker} for Clicker Task. Can be used for initialization of worker.
+     * <p>
+     * {@code Note: Easiest solution is to create new instance of SwingWorker}.
+     * */
     private void resetClickerWorker() {
         ClickerPanel cp = view.getClickerPanel();
 
@@ -310,13 +347,9 @@ public class Controller {
                     Integer.parseInt(cp.getMinutes()) * 60_000 +
                     Integer.parseInt(cp.getHours()) * 3_600_000;
 
-                int times;
-                if (cp.getInfiniteTimes().isSelected())
-                    times = -1;
-                else if (cp.getTimesRadioButton().isSelected())
-                    times = Integer.parseInt(cp.getTimes());
-                else
-                    throw new NullPointerException("Click Repeat settings is null");
+                if (interval == 0) interval++; // Safety reasons
+
+                int times = cp.getInfiniteTimes().isSelected() ? -1 : Integer.parseInt(cp.getTimes());
 
                 String mouseButton = reverseTranslate((String) cp.getButtonComboBox().getSelectedItem());
                 String clickType = reverseTranslate((String) cp.getTypeComboBox().getSelectedItem());
@@ -350,5 +383,43 @@ public class Controller {
                 model.setClickCount(0);
             }
         };
+    }
+
+    /**
+     * Resets GUI elements in Settings Panel. In case user left settings and didn't save.
+     * */
+    private void resetSettingsPanel() {
+        SettingsPanel sp = view.getSettingsPanel();
+
+        String language = "LOC_LANG_" + model.getLanguage();
+        sp.getLanguageComboBox().setSelectedItem(
+            translate(language)
+        );
+
+        String theme = "LOC_THEME_" + model.getTheme();
+        sp.getThemeComboBox().setSelectedItem(
+            translate(theme)
+        );
+
+        sp.getStartHotkey().setText(model.getStartHotkey());
+        sp.getStopHotkey().setText(model.getStopHotkey());
+        sp.getToggleHotkey().setText(model.getToggleHotkey());
+    }
+
+    @Override
+    public void nativeKeyPressed(NativeKeyEvent e) {
+        ClickerPanel cp = view.getClickerPanel();
+
+        if (view.getCurrentScene() != View.CLICKER_SCENE) return;
+
+        if (e.getKeyCode() == model.getStartHotkeyKeyEvent()) {
+            cp.getStartButton().doClick();
+
+        } else if (e.getKeyCode() == model.getStopHotkeyKeyEvent()) {
+            cp.getStopButton().doClick();
+
+        } else if (e.getKeyCode() == model.getToggleHotkeyKeyEvent()) {
+            cp.getToggleButton().doClick();
+        }
     }
 }

@@ -4,11 +4,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+/**
+ * Window for location picking. Is an instance of {@link JFrame}
+ * */
 public class LocationPicker extends JFrame {
 
     private int x, y;
 
     public LocationPicker() throws HeadlessException {
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         setUndecorated(true);
         setAlwaysOnTop(true);
         setResizable(false);
@@ -30,6 +34,7 @@ public class LocationPicker extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
+                setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 dispose();
             }
         });
@@ -38,13 +43,13 @@ public class LocationPicker extends JFrame {
             @Override
             public void mouseMoved(MouseEvent e) {
                 super.mouseMoved(e);
-                update(e);
+                update();
             }
 
             @Override
             public void mouseDragged(MouseEvent e) {
                 super.mouseDragged(e);
-                update(e);
+                update();
             }
         });
 
@@ -55,13 +60,17 @@ public class LocationPicker extends JFrame {
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     x = 0;
                     y = 0;
+                    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                     dispose();
                 }
             }
         });
     }
 
-    private void update(MouseEvent e) {
+    /**
+     * Updates saved mouse position.
+     * */
+    private void update() {
         Point cursorLocation = MouseInfo.getPointerInfo().getLocation();
         x = cursorLocation.x;
         y = cursorLocation.y;

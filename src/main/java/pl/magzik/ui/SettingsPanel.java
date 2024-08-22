@@ -1,19 +1,29 @@
 package pl.magzik.ui;
 
+import pl.magzik.Model;
+
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 public class SettingsPanel extends JPanel {
 
-    JComboBox<String> languageComboBox, themeComboBox;
+    private final JComboBox<String> languageComboBox, themeComboBox;
 
-    JTextField startHotkey, stopHotkey, toggleHotkey;
+    private final JTextField startHotkey, stopHotkey, toggleHotkey;
 
-    JButton saveButton, backButton, startCapture, stopCapture, toggleCapture;
+    private final JButton saveButton, backButton, startCapture, stopCapture, toggleCapture;
 
+    private final Border buttonBorder;
+
+    /**
+     * Hehe it is a mess a bit :(
+     * <p>
+     * It should be probably cleaned up, but maybe in the future.
+     * */
     public SettingsPanel() {
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -138,14 +148,31 @@ public class SettingsPanel extends JPanel {
 
         add(mainButtonPanel, c);
 
+        buttonBorder = startHotkey.getBorder();
 
         startCapture.addActionListener(_ -> {
+            resetBorders();
+            startHotkey.setBorder(
+                new CompoundBorder(
+                    BorderFactory.createLineBorder(Color.RED), startHotkey.getBorder()
+                )
+            );
+
            startCapture.addKeyListener(new KeyAdapter() {
                @Override
                public void keyReleased(KeyEvent e) {
                    int keyCode = e.getKeyCode();
-                   startHotkey.setText(KeyEvent.getKeyText(keyCode));
+                   String keyText = KeyEvent.getKeyText(keyCode);
 
+                   if (
+                       Model.keyMap.containsKey(keyText) &&
+                       !stopHotkey.getText().equals(keyText) &&
+                       !toggleHotkey.getText().equals(keyText)
+                   ) {
+                       startHotkey.setText(keyText);
+                   }
+
+                   startHotkey.setBorder(buttonBorder);
                    startCapture.removeKeyListener(this);
                }
            });
@@ -154,12 +181,28 @@ public class SettingsPanel extends JPanel {
         });
 
         stopCapture.addActionListener(_ -> {
+            resetBorders();
+            stopHotkey.setBorder(
+                new CompoundBorder(
+                    BorderFactory.createLineBorder(Color.RED), stopHotkey.getBorder()
+                )
+            );
+
             stopCapture.addKeyListener(new KeyAdapter() {
                 @Override
                 public void keyReleased(KeyEvent e) {
                     int keyCode = e.getKeyCode();
-                    stopHotkey.setText(KeyEvent.getKeyText(keyCode));
+                    String keyText = KeyEvent.getKeyText(keyCode);
 
+                    if (
+                        Model.keyMap.containsKey(keyText) &&
+                        !startHotkey.getText().equals(keyText) &&
+                        !toggleHotkey.getText().equals(keyText)
+                    ) {
+                        stopHotkey.setText(keyText);
+                    }
+
+                    stopHotkey.setBorder(buttonBorder);
                     stopCapture.removeKeyListener(this);
                 }
             });
@@ -168,18 +211,48 @@ public class SettingsPanel extends JPanel {
         });
 
         toggleCapture.addActionListener(_ -> {
+            resetBorders();
+            toggleHotkey.setBorder(
+                new CompoundBorder(
+                    BorderFactory.createLineBorder(Color.RED), toggleHotkey.getBorder()
+                )
+            );
+
             toggleCapture.addKeyListener(new KeyAdapter() {
                 @Override
                 public void keyReleased(KeyEvent e) {
                     int keyCode = e.getKeyCode();
-                    toggleHotkey.setText(KeyEvent.getKeyText(keyCode));
+                    String keyText = KeyEvent.getKeyText(keyCode);
 
+                    if (
+                        Model.keyMap.containsKey(keyText) &&
+                        !startHotkey.getText().equals(keyText) &&
+                        !stopHotkey.getText().equals(keyText)
+                    ) {
+                        toggleHotkey.setText(keyText);
+                    }
+
+                    toggleHotkey.setBorder(buttonBorder);
                     toggleCapture.removeKeyListener(this);
                 }
             });
 
             toggleCapture.requestFocusInWindow();
         });
+
+        backButton.addActionListener(_ -> resetBorders());
+
+        saveButton.addActionListener(_ -> resetBorders());
+    }
+
+
+    /**
+     * Resets hotkey buttons borders
+     * */
+    private void resetBorders() {
+        startHotkey.setBorder(buttonBorder);
+        stopHotkey.setBorder(buttonBorder);
+        toggleHotkey.setBorder(buttonBorder);
     }
 
     public JComboBox<String> getLanguageComboBox() {

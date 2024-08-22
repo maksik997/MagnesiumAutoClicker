@@ -1,6 +1,3 @@
-// TODO:
-//  Redundancy etc.,
-
 package pl.magzik.ui;
 
 import pl.magzik.ui.utils.Utility;
@@ -9,41 +6,44 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 
-import static pl.magzik.ui.utils.Utility.createUnsignedIntegerTextField;
 import static pl.magzik.ui.utils.Utility.createIntegerTextField;
 
+/**
+ * GUI panel. Instance of {@link JPanel}
+ * */
 public class ClickerPanel extends JPanel {
 
     private JButton settingsButton, pickLocationButton, startButton, stopButton, toggleButton;
 
     private JTextField hoursTextField, minutesTextField, secondsTextField, millisecondsTextField, timesTextField, xLocationTextField, yLocationTextField;
 
-    private ButtonGroup timesButtonGroup, locationButtonGroup;
-
     private JComboBox<String> buttonComboBox, typeComboBox;
 
-    private JRadioButton infiniteTimes, timesRadioButton, currentLocationRadioButton, customLocationRadioButton;
+    private JRadioButton infiniteTimes, customLocationRadioButton;
+
+    private final JPanel mainPanel;
 
     public ClickerPanel() {
         setLayout(new BorderLayout());
 
         initializeHeaderPanel();
 
-        JPanel mainPanel = new JPanel();
+        mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        initializeIntervalPanel(mainPanel);
-
-        initializeClickSettingPanel(mainPanel);
-
-        initializeLocationPanel(mainPanel);
+        initializeIntervalPanel();
+        initializeClickSettingPanel();
+        initializeLocationPanel();
 
         add(mainPanel, BorderLayout.CENTER);
 
         initializeFooterPanel();
     }
 
+    /**
+     * Initializes header
+     * */
     private void initializeHeaderPanel() {
         JPanel headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.X_AXIS));
@@ -52,7 +52,7 @@ public class ClickerPanel extends JPanel {
                 new EmptyBorder(10, 10, 10, 10)
         ));
 
-        JLabel titleLabel = new JLabel("LOC_TITLE"); // todo add logo
+        JLabel titleLabel = new JLabel("LOC_TITLE");
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 16));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         titleLabel.setAlignmentY(CENTER_ALIGNMENT);
@@ -69,7 +69,10 @@ public class ClickerPanel extends JPanel {
         add(headerPanel, BorderLayout.NORTH);
     }
 
-    private void initializeIntervalPanel(JPanel mainPanel) {
+    /**
+     * Initializes interval panel.
+     * */
+    private void initializeIntervalPanel() {
         JPanel intervalPanel = new JPanel();
         intervalPanel.setLayout(new GridBagLayout());
         intervalPanel.setBorder(new CompoundBorder(
@@ -115,7 +118,10 @@ public class ClickerPanel extends JPanel {
         mainPanel.add(intervalPanel);
     }
 
-    private void initializeClickSettingPanel(JPanel mainPanel) {
+    /**
+     * Initializes click settings panel
+     * */
+    private void initializeClickSettingPanel() {
         JPanel clickSettingPanel = new JPanel();
         clickSettingPanel.setLayout(new GridLayout(1, 2));
         clickSettingPanel.setBorder(new EmptyBorder(10, 0, 10, 0));
@@ -130,7 +136,7 @@ public class ClickerPanel extends JPanel {
             new EmptyBorder(10, 10, 10, 10)
         ));
 
-        timesButtonGroup = new ButtonGroup();
+        ButtonGroup timesButtonGroup = new ButtonGroup();
 
         infiniteTimes = new JRadioButton("LOC_CP_INFINITE_TIMES");
         infiniteTimes.setSelected(true);
@@ -143,7 +149,7 @@ public class ClickerPanel extends JPanel {
         JPanel timesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         timesPanel.setAlignmentX(LEFT_ALIGNMENT);
 
-        timesRadioButton = new JRadioButton();
+        JRadioButton timesRadioButton = new JRadioButton();
         timesButtonGroup.add(timesRadioButton);
         timesPanel.add(timesRadioButton);
 
@@ -184,7 +190,10 @@ public class ClickerPanel extends JPanel {
         mainPanel.add(clickSettingPanel);
     }
 
-    private void initializeLocationPanel(JPanel mainPanel) {
+    /**
+     * Initializes location panel
+     * */
+    private void initializeLocationPanel() {
         JPanel locationPanel = new JPanel();
         locationPanel.setLayout(new BoxLayout(locationPanel, BoxLayout.Y_AXIS));
         locationPanel.setBorder(new CompoundBorder(
@@ -195,10 +204,10 @@ public class ClickerPanel extends JPanel {
             new EmptyBorder(10, 10, 10, 10)
         ));
 
-        locationButtonGroup = new ButtonGroup();
+        ButtonGroup locationButtonGroup = new ButtonGroup();
 
         JPanel currentLocationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        currentLocationRadioButton = new JRadioButton("LOC_CP_CURRENT_LOCATION");
+        JRadioButton currentLocationRadioButton = new JRadioButton("LOC_CP_CURRENT_LOCATION");
         currentLocationRadioButton.setSelected(true);
         locationButtonGroup.add(currentLocationRadioButton);
         currentLocationPanel.add(currentLocationRadioButton);
@@ -237,6 +246,9 @@ public class ClickerPanel extends JPanel {
         mainPanel.add(locationPanel);
     }
 
+    /**
+     * Initializes footer panel.
+     */
     private void initializeFooterPanel() {
         JPanel footerPanel = new JPanel();
         footerPanel.setLayout(new GridLayout(1, 3));
@@ -262,6 +274,62 @@ public class ClickerPanel extends JPanel {
         add(footerPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Gives hours (but handles situation when text field is empty)
+     * @return Value of {@link JTextField} or 0 if is empty.
+     * */
+    public String getHours() {
+        return hoursTextField.getText().isEmpty() ? "0" : hoursTextField.getText();
+    }
+
+    /**
+     * Gives minutes (but handles situation when text field is empty)
+     * @return Value of {@link JTextField} or 0 if is empty.
+     * */
+    public String getMinutes() {
+        return minutesTextField.getText().isEmpty() ? "0" : minutesTextField.getText();
+    }
+
+    /**
+     * Gives seconds (but handles situation when text field is empty)
+     * @return Value of {@link JTextField} or 0 if is empty.
+     * */
+    public String getSeconds() {
+        return secondsTextField.getText().isEmpty() ? "0" : secondsTextField.getText();
+    }
+
+    /**
+     * Gives milliseconds (but handles situation when text field is empty)
+     * @return Value of {@link JTextField} or 0 if is empty.
+     * */
+    public String getMilliseconds() {
+        return millisecondsTextField.getText().isEmpty() ? "0" : millisecondsTextField.getText();
+    }
+
+    /**
+     * Gives how many times (but handles situation when text field is empty)
+     * @return Value of {@link JTextField} or 0 if is empty.
+     * */
+    public String getTimes() {
+        return timesTextField.getText().isEmpty() ? "0" : timesTextField.getText();
+    }
+
+    /**
+     * Gives x location (but handles situation when text field is empty)
+     * @return Value of {@link JTextField} or 0 if is empty.
+     * */
+    public String getXLocation() {
+        return xLocationTextField.getText().isEmpty() ? "0" : xLocationTextField.getText();
+    }
+
+    /**
+     * Gives y location (but handles situation when text field is empty)
+     * @return Value of {@link JTextField} or 0 if is empty.
+     * */
+    public String getYLocation() {
+        return yLocationTextField.getText().isEmpty() ? "0" : yLocationTextField.getText();
+    }
+
     public JComboBox<String> getButtonComboBox() {
         return buttonComboBox;
     }
@@ -274,45 +342,14 @@ public class ClickerPanel extends JPanel {
         return millisecondsTextField;
     }
 
-    public String getHours() {
-        return hoursTextField.getText();
-    }
-
-    public String getMinutes() {
-        return minutesTextField.getText();
-    }
-
-    public String getSeconds() {
-        return secondsTextField.getText();
-    }
-
-    public String getMilliseconds() {
-        return millisecondsTextField.getText();
-    }
-
     public JRadioButton getInfiniteTimes() {
         return infiniteTimes;
-    }
-
-    public JRadioButton getTimesRadioButton() {
-        return timesRadioButton;
     }
 
     public JRadioButton getCustomLocationRadioButton() {
         return customLocationRadioButton;
     }
 
-    public String getTimes() {
-        return timesTextField.getText();
-    }
-
-    public String getXLocation() {
-        return xLocationTextField.getText();
-    }
-
-    public String getYLocation() {
-        return yLocationTextField.getText();
-    }
 
     public JTextField getXLocationTextField() {
         return xLocationTextField;
