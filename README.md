@@ -6,7 +6,7 @@ In addition, you can easily start/stop/toggle Auto-Clicker by simply using a sho
 Design is highly inspired: [GT Auto Clicker](https://apps.microsoft.com/detail/9ndjq0j8ksdz?ocid=webpdpshare).
 
 ## System requirements:
-Operating System: Windows, Linux *(? todo)*
+Operating System: Windows
 Java: 12+ 
 And anything else not mentioned from there: [JNativeHook](https://github.com/kwhat/jnativehook/blob/2.2/README.md).
 
@@ -18,11 +18,6 @@ Simply unpack zip archive and run .exe file.
 
 #### Traditional:
 Run `MagnesiumAutoClicker_installer.exe` and follow wizard instructions.
-
----
-### Linux:
----
-***TODO***
 
 ## Known issues:
 There are no known issues at the moment.
@@ -90,9 +85,9 @@ Any problems should be reported here on github in [Issue tab](https://github.com
 
 ## Used External Libraries:
 - JNativeHook: [Link](https://github.com/kwhat/jnativehook/tree/2.2)
+- FlatLaf: [Link](https://github.com/JFormDesigner/FlatLaf)
 
 ## Security information:
 For anyone worried... Yes application uses JNativeHook which allows to listen to keyboard and mouse without a focus,
-but in case of this application it is only used to allow comfortably executing shortcuts for three buttons in main panel. And this is the only reason.<br>
+but in case of this application it is only used to allow comfortably executing shortcuts for three buttons in main panel. And that is the only reason.<br>
 In any case this application is open sourced, so if you want you can check yourself if it is safe to use.
-
