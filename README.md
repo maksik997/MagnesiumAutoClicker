@@ -1,4 +1,11 @@
 # Magnesium Auto Clicker
+
+## Note:
+
+Further development of this project is currently being migrated to the [Gitlab](https://gitlab.com/magzico/MagnesiumAutoClicker).
+
+As soon as there is new update link above will become available.
+
 ## Description:
 Easy application for *"auto-clicking"*.
 You can set the interval, mouse button, click type and click position in the application. 
