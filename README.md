@@ -1,10 +1,9 @@
 # Magnesium Auto Clicker
 
-## Note:
-
-Further development of this project is currently being migrated to the [Gitlab](https://gitlab.com/magzico/MagnesiumAutoClicker).
-
-As soon as there is new update link above will become available.
+> [!IMPORTANT]
+> 
+> Further development of this project is currently being migrated to the [Codeberg]([https://gitlab.com/magzico/MagnesiumAutoClicker](https://codeberg.org/magzik/MagnesiumAutoClicker)).
+>
 
 ## Description:
 Easy application for *"auto-clicking"*.
